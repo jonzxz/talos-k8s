@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: simple-web
+  labels:
+    app: simple-web
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-web
+  namespace: simple-web
+  labels:
+    app: simple-web
+    role: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simple-web
+  template:
+    metadata:
+      labels:
+        app: simple-web
+    spec:
+      containers:
+      - name: yeasy
+        image: yeasy/simple-web
+        imagePullPolicy: IfNotPresent
+        ports:
+          - name: yeasy-web-port
+            containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-web-svc
+  namespace: simple-web
+  labels:
+    app: simple-web
+spec:
+  type: ClusterIP
+  selector:
+    app: simple-web
+  ports:
+    - name: simple-web-svc-port
+      port: 80
+      targetPort: 80
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: simple-web-ingress
+  namespace: simple-web
+  labels:
+    app: simple-web
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: simple-web-svc
+              port:
+                number: 80
